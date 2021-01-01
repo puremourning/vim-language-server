@@ -32,7 +32,8 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'out'),
     filename: '[name].js',
-    libraryTarget: 'commonjs'
+    libraryTarget: 'commonjs',
+    devtoolModuleFilenameTemplate: '[absolute-resource-path]'
   },
   plugins: [],
   node: {

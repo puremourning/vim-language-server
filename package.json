@@ -17,7 +17,9 @@
   "scripts": {
     "build-docs": "rm ./src/docs/builtin-docs.json && ./bin/build-docs.js",
     "build": "rm -rf ./out && webpack",
+    "build-debug": "rm -rf ./out && webpack --mode development --devtool source-map",
     "watch": "webpack -w",
+    "watch-debug": "webpack --mode development --devtool source-map -w",
     "test": "mocha test/src/**/*.ts --require ts-node/register",
     "lint": "tslint -c tslint.json --format verbose {.,test}/src/**/*.ts src/index.ts",
     "fix": "tslint -c tslint.json --fix {.,test}/src/**/*.ts src/index.ts"

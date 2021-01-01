@@ -1,0 +1,32 @@
+{
+  "configurations": {
+    "node attach (node --insepct)": {
+      "adapter": "vscode-node",
+      "configuration": {
+        "request": "attach",
+        "port": 9229,
+        "outFiles": [
+          "${workspaceRoot}/out/*.js",
+          "${workspaceRoot}/bin/*.js"
+        ],
+        "resolveSourceMapLocations":[
+          "${workspaceRoot}/out/*.js"
+        ]
+      }
+    },
+    "node attach (by PID)": {
+      "adapter": "vscode-node",
+      "configuration": {
+        "request": "attach",
+        "processId#json": "${PID}",
+        "outFiles": [
+          "${workspaceRoot}/out/*.js",
+          "${workspaceRoot}/bin/*.js"
+        ],
+        "resolveSourceMapLocations":[
+          "${workspaceRoot}/out/*.js"
+        ]
+      }
+    }
+  }
+}
