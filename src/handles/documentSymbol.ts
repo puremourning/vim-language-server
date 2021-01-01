@@ -1,16 +1,24 @@
-import {DocumentSymbolParams, DocumentSymbol, SymbolKind, Range, Position} from "vscode-languageserver";
+import {DocumentSymbolParams, DocumentSymbol, SymbolKind, Range, Position, SymbolInformation} from "vscode-languageserver";
 
 import {workspace} from "../server/workspaces";
 import {IFunction} from "../server/buffer";
 import {documents} from "../server/documents";
+import config from "../server/config";
 
-export const documentSymbolProvider = (params: DocumentSymbolParams): DocumentSymbol[] => {
-  const documentSymbols: DocumentSymbol[] = []
+export const documentSymbolProvider = (params: DocumentSymbolParams): DocumentSymbol[] | SymbolInformation[] => {
+  if (config.hierarchicalDocumentSymbolSupport) {
+    return hierarchicalDocumentSymbol(params);
+  } else {
+    return flatDocumentSymbol(params);
+  }
+}
+
+function hierarchicalDocumentSymbol( params: DocumentSymbolParams ): DocumentSymbol[] {
   const { textDocument } = params
   const buffer = workspace.getBufferByUri(textDocument.uri)
   const document = documents.get(textDocument.uri)
   if (!buffer || !document) {
-    return documentSymbols
+    return [] as DocumentSymbol[]
   }
   const globalFunctions = buffer.getGlobalFunctions()
   const scriptFunctions = buffer.getScriptFunctions()
@@ -101,6 +109,104 @@ export const documentSymbolProvider = (params: DocumentSymbolParams): DocumentSy
           kind: SymbolKind.Variable,
           range: vRange,
           selectionRange: vRange
+        }
+      })
+    )
+}
+
+function flatDocumentSymbol( params: DocumentSymbolParams ): SymbolInformation[] {
+  const { textDocument } = params
+  const buffer = workspace.getBufferByUri(textDocument.uri)
+  const document = documents.get(textDocument.uri)
+  if (!buffer || !document) {
+    return [] as SymbolInformation[]
+  }
+  const globalFunctions = buffer.getGlobalFunctions()
+  const scriptFunctions = buffer.getScriptFunctions()
+  const globalVariables = buffer.getGlobalIdentifiers()
+  const localVariables = buffer.getLocalIdentifiers()
+  const functions = Object.values(globalFunctions).concat(Object.values(scriptFunctions)).reduce((pre, cur) => {
+    return pre.concat(cur)
+  }, [])
+  let variables = Object.values(globalVariables).concat(Object.values(localVariables)).reduce((pre, cur) => {
+    return pre.concat(cur)
+  }, [])
+  const sortFunctions: IFunction[] = []
+  functions.forEach(func => {
+    if (sortFunctions.length === 0) {
+      return sortFunctions.push(func)
+    }
+    let i = 0;
+    for (const len = sortFunctions.length; i < len; i += 1) {
+      const sf = sortFunctions[i]
+      if (func.range.endLine < sf.range.endLine) {
+        sortFunctions.splice(i, 0, func)
+        break
+      }
+    }
+    if (i === sortFunctions.length) {
+      sortFunctions.push(func)
+    }
+  })
+
+  return sortFunctions
+    .map(func => {
+      const vimRange = func.range
+      const line = document.getText(Range.create(
+        Position.create(vimRange.endLine - 1, 0),
+        Position.create(vimRange.endLine, 0)
+      ))
+      const range = Range.create(
+        Position.create(vimRange.startLine - 1, vimRange.startCol - 1),
+        Position.create(vimRange.endLine - 1, vimRange.endCol - 1 + line.slice(vimRange.endCol - 1).split(' ')[0].length)
+      )
+      var symbols: SymbolInformation[] = []
+
+      symbols.push( {
+        name: func.name,
+        kind: SymbolKind.Function,
+        location: {
+          uri: document.uri,
+          range
+        }
+      } )
+      variables = variables.filter(v => {
+        if (v.startLine >= vimRange.startLine && v.startLine <= vimRange.endLine) {
+          const vRange = Range.create(
+            Position.create(v.startLine - 1, v.startCol - 1),
+            Position.create(v.startLine, v.startCol - 1 + v.name.length)
+          )
+          symbols.push({
+            name: v.name,
+            kind: SymbolKind.Variable,
+            location: {
+              uri: document.uri,
+              range: vRange,
+            }
+          })
+          return false
+        }
+        return true
+      })
+      return symbols
+    })
+    .reduce((res, cur) => {
+      res.push(...cur)
+      return res
+    }, [] as SymbolInformation[])
+    .concat(
+      variables.map(v => {
+        const vRange = Range.create(
+          Position.create(v.startLine - 1, v.startCol - 1),
+          Position.create(v.startLine, v.startCol - 1 + v.name.length)
+        )
+        return {
+          name: v.name,
+          kind: SymbolKind.Variable,
+          location: {
+            uri: document.uri,
+            range: vRange
+          }
         }
       })
     )

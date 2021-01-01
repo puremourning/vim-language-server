@@ -52,6 +52,7 @@ connection.onInitialize((param: InitializeParams) => {
       ...(diagnostic || {}),
     },
     snippetSupport: shvl.get(param, "capabilities.textDocument.completion.completionItem.snippetSupport"),
+    hierarchicalDocumentSymbolSupport: shvl.get(param, "capabilities.textDocument.documentSymbol.hierarchicalDocumentSymbolSupport"),
     suggest: {
       fromRuntimepath: false,
       fromVimruntime: true,

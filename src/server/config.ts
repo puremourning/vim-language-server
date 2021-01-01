@@ -36,6 +36,11 @@ export default {
     return conf && conf.snippetSupport || false;
   },
 
+  get hierarchicalDocumentSymbolSupport(): boolean {
+    return conf && conf.hierarchicalDocumentSymbolSupport || false;
+  },
+
+
   get suggest(): ISuggest {
     return conf && conf.suggest || {
       fromRuntimepath: false,

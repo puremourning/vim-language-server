@@ -28,6 +28,7 @@ export interface IConfig {
   runtimepath: string[];
   diagnostic: IDiagnostic;
   snippetSupport: boolean;
+  hierarchicalDocumentSymbolSupport: boolean;
   suggest: ISuggest;
   indexes: IIndexes;
 }
