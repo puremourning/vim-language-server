@@ -44,6 +44,17 @@ npm install -g vim-language-server
 :CocInstall coc-vimlsp
 ```
 
+**For YCM user**, see [lsp-examples](https://github.com/ycm-core/lsp-examples)
+and follow the instructions. For example:
+
+```vim
+$ git clone https://github.com/ycm-core/lsp-examples
+$ cd lsp-examples
+$ ./install.py --enable-vim
+$ echo "source $(pwd)/vimrc.generated" >> ~/.vimrc
+```
+
+
 ## Config
 
 for document highlight
@@ -115,6 +126,52 @@ lsp client config example with coc.nvim
     "filetypes": [ "vim" ]
   }
 }
+```
+
+Example YCM config:
+
+```viml
+" .vimrc
+let g:ycm_extra_conf_vim_data = [
+  \ '&iskeyword',
+  \ '$VIMRUNTIME',
+  \ '&rtp'
+  \ ]
+```
+
+```python
+# .ycm_extra_conf.py
+def Settings( **kwargs ):
+  if kwargs[ 'language' ] == 'vim':
+    return {
+      'ls':{
+        "iskeyword":  kwargs[ 'client_data' ][ '&iskeyword' ],
+        "vimruntime": kwargs[ 'client_data' ][ '$VIMRUNTIME' ],
+        "runtimepath": kwargs[ 'client_data' ][ '&rtp' ],
+        "diagnostic": {
+          "enable": true
+        },
+        "indexes": {
+          "runtimepath": True,      # if index runtimepath's vim files this will effect the suggest
+          "gap": 100,               # index time gap between next file
+          "count": 3,               # count of files index at the same time
+          # Names of files used as the mark of project root.
+          # If empty, the default value [".git", "autoload", "plugin"] will be used
+          "projectRootPatterns" : [
+            "strange-root-pattern",
+            ".git",
+            "autoload",
+            "plugin"
+          ] 
+        },
+        "suggest": {
+          "fromVimruntime": True,   # completionItems from vimruntime's vim files
+          "fromRuntimepath": False  # completionItems from runtimepath's vim files, if this is true that fromVimruntime is true
+        }
+      }
+    }
+
+  return None
 ```
 
 **Note**:
